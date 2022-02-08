@@ -17,7 +17,7 @@ pub struct Todo {
     pub is_checked: bool,
 }
 
-#[derive(Insertable, Debug, Deserialize)]
+#[derive(Insertable, Debug, Deserialize, Clone)]
 #[table_name = "todos"]
 pub struct InsertableTodo {
     pub title: String,
@@ -25,7 +25,7 @@ pub struct InsertableTodo {
     pub is_checked: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct EditableTodo {
     pub title: Option<String>,
     pub body: Option<String>,
@@ -36,17 +36,23 @@ impl Todo {
     pub fn get_all(db: &SqliteConnection) -> anyhow::Result<Vec<Todo>> {
         use crate::schema::todos::dsl::*;
 
-        let results = todos
-            .filter(is_checked.eq(false))
-            .limit(5)
-            .load::<Todo>(db)?;
+        let results = todos.filter(is_checked.eq(false)).load::<Todo>(db)?;
 
         Ok(results)
     }
     pub fn insert(db: &SqliteConnection, new_todo: InsertableTodo) -> anyhow::Result<()> {
-        use crate::schema::todos::dsl::*;
+        println!("hello");
+        dbg!(new_todo.clone());
 
-        diesel::insert_into(todos).values(&new_todo).execute(db)?;
+        {
+            use crate::schema::todos::dsl::*;
+
+            let q = diesel::insert_into(todos).values(&new_todo);
+
+            dbg!(diesel::debug_query::<diesel::sqlite::Sqlite, _>(&q));
+
+            q.execute(db)?;
+        }
 
         Ok(())
     }
