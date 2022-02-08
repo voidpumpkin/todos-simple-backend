@@ -36,23 +36,14 @@ impl Todo {
     pub fn get_all(db: &SqliteConnection) -> anyhow::Result<Vec<Todo>> {
         use crate::schema::todos::dsl::*;
 
-        let results = todos.filter(is_checked.eq(false)).load::<Todo>(db)?;
+        let results = todos.load::<Todo>(db)?;
 
         Ok(results)
     }
     pub fn insert(db: &SqliteConnection, new_todo: InsertableTodo) -> anyhow::Result<()> {
-        println!("hello");
-        dbg!(new_todo.clone());
+        use crate::schema::todos::dsl::*;
 
-        {
-            use crate::schema::todos::dsl::*;
-
-            let q = diesel::insert_into(todos).values(&new_todo);
-
-            dbg!(diesel::debug_query::<diesel::sqlite::Sqlite, _>(&q));
-
-            q.execute(db)?;
-        }
+        diesel::insert_into(todos).values(&new_todo).execute(db)?;
 
         Ok(())
     }
